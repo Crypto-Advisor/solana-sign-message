@@ -185,7 +185,7 @@ function App() {
         </div>
 
         <div className="response">
-          {prevResponse != undefined ? 
+          {prevResponse !== undefined ? 
           <div>
             <p><b>Message:</b> {prevResponse.message}</p>
             <p><b>Signature:</b> {prevResponse.response.signature}</p> 
