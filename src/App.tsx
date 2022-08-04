@@ -138,62 +138,57 @@ function App() {
 
   return (
     <div className="App">
-        <div>
-          <h2>Sol Sign</h2>
-          {provider && !walletKey && (
-            <button
-              style={{
-                fontSize: "16px",
-                padding: "15px",
-                fontWeight: "bold",
-                borderRadius: "5px",
-              }}
-              onClick={connectWallet}
-            >
-              Connect to Phantom Wallet
-            </button>
-          )}
-
-          {provider && walletKey && (
-            <div>
-              <p>Connected account {walletKeyString}</p>
-
+        <div className="nav-bar">
+          <h2>Sol.Sign</h2>
+          <div className="button-container">
+            {provider && !walletKey && (
               <button
                 style={{
                   fontSize: "16px",
                   padding: "15px",
                   fontWeight: "bold",
                   borderRadius: "5px",
-                  margin: "15px auto",
                 }}
-                onClick={disconnectWallet}
+                onClick={connectWallet}
               >
-                Disconnect
+                Connect to Phantom Wallet
               </button>
-            </div>
-          )}
+            )}
 
-          {!provider && (
-            <p>
-              No provider found. Install{" "}
-              <a href="https://phantom.app/">Phantom Browser extension</a>
-            </p>
-          )}
+            {provider && walletKey && (
+              <div className="address-holder">
+                <p><b>Address:</b> {walletKeyString}</p>
+
+                <button
+                  onClick={disconnectWallet}
+                >
+                  Disconnect
+                </button>
+              </div>
+            )}
+
+            {!provider && (
+              <p>
+                No provider found. Install{" "}
+                <a href="https://phantom.app/">Phantom Browser extension</a>
+              </p>
+            )}
+          </div>
 
         </div>
 
         <div>
             <form>
-              <input type='text' value={message} onChange={(e) =>setMessage(e.target.value)} required />
-              <button onClick={signMessage}>Sign</button>
+              <input className="Input-text" type='text' placeholder="Message" value={message} onChange={(e) =>setMessage(e.target.value)} required />
+              <button className="sign" onClick={signMessage}>Sign</button>
             </form>
         </div>
 
-        <div>
+        <div className="response">
           {prevResponse != undefined ? 
           <div>
-            <p>Message: {prevResponse.message}</p>
-            <p>Signature: {prevResponse.response.signature}</p> 
+            <p><b>Message:</b> {prevResponse.message}</p>
+            <p><b>Signature:</b> {prevResponse.response.signature}</p> 
           </div>
           : null}
         </div>
