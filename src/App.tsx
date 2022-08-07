@@ -2,8 +2,12 @@ import { useEffect, useState } from "react";
 import {
   PublicKey,
   Transaction,
+  sendAndConfirmTransaction,
+  TransactionInstruction
 } from "@solana/web3.js";
 import './App.css';
+
+import {createMemoInstruction, MEMO_PROGRAM_ID} from './memo'
 
 type DisplayEncoding = "utf8" | "hex";
 type PhantomEvent = "disconnect" | "connect" | "accountChanged";
@@ -42,6 +46,7 @@ interface PhantomProvider {
     message: Uint8Array | string,
     display?: DisplayEncoding
   ) => Promise<any>;
+  signAndSendTransaction: (transaction: TransactionInstruction) => Promise<any>;
   connect: (opts?: Partial<ConnectOpts>) => Promise<{ publicKey: PublicKey }>;
   disconnect: () => Promise<void>;
   on: (event: PhantomEvent, handler: (args: any) => void) => void;
@@ -50,12 +55,14 @@ interface PhantomProvider {
 
 
 function App() {
+
   const [provider, setProvider] = useState<PhantomProvider | undefined>(
     undefined
   );
   const [walletKey, setWalletKey] = useState<PhantomProvider | undefined>(
     undefined
   );
+  const [pubKey, setPubKey] = useState<PublicKey | undefined>(undefined);
   const [walletKeyString, setWalletKeyString] = useState<string | undefined>(undefined);
   const [message, setMessage] = useState<string>("");
   const [prevResponse, setPrevResponse] = useState<prevResponse | undefined>(undefined);
@@ -83,6 +90,7 @@ function App() {
         const response = await solana.connect();
         console.log('wallet account ', response.publicKey.toString());
         setWalletKey(response.publicKey.toString());
+        setPubKey(response.publicKey);
         setWalletKeyString(response.publicKey.toString());
       } catch (err) {
        // { code: 4001, message: 'User rejected the request.' }
@@ -121,11 +129,35 @@ function App() {
             response: signedMessage,
             message: message
           })
-          console.log(signedMessage)
-          setMessage('')
+          console.log(signedMessage);
+          setMessage('');
         })
       }
     };
+
+    const signAndSendTransaction = async (provider: PhantomProvider, transaction: TransactionInstruction): Promise<string | undefined> => {
+      try {
+        const { signature } = await provider.signAndSendTransaction(transaction);
+        return signature;
+      } catch (error) {
+        console.warn(error);
+        //throw new Error(error.message);
+      }
+    };
+
+    const memoTxn = async(e:any) => {
+      e.preventDefault();
+      if(pubKey && provider){
+        const transaction = createMemoInstruction(message, [pubKey])
+        console.log(transaction)
+        
+        const signature = signAndSendTransaction(provider, transaction);
+        console.log(signature)
+      }
+
+      console.log('no pub ')
+      setMessage('');
+    }
 
   // detect phantom provider exists
   useEffect(() => {
@@ -181,6 +213,7 @@ function App() {
             <form>
               <input className="Input-text" type='text' placeholder="Message" value={message} onChange={(e) =>setMessage(e.target.value)} required />
               <button className="sign" onClick={signMessage}>Sign</button>
+              <button className="sign" onClick={memoTxn}>Memo Tx</button>
             </form>
         </div>
 
@@ -188,7 +221,7 @@ function App() {
           {prevResponse !== undefined ? 
           <div>
             <p><b>Message:</b> {prevResponse.message}</p>
-            <p><b>Signature:</b> {prevResponse.response.signature}</p> 
+            <p><b>Signature / Tx Hash:</b> {prevResponse.response.signature}</p> 
           </div>
           : null}
         </div>
