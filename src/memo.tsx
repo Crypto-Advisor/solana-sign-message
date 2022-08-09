@@ -1,5 +1,5 @@
 import {Buffer} from 'buffer';
-import {PublicKey, TransactionInstruction} from '@solana/web3.js';
+import {PublicKey, TransactionInstruction, Transaction} from '@solana/web3.js';
 
 export const MEMO_PROGRAM_ID: PublicKey = new PublicKey(
   'MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr',
@@ -26,9 +26,9 @@ export const MEMO_PROGRAM_ID: PublicKey = new PublicKey(
  **/
 export function createMemoInstruction(
   memo: string,
-  signerPubkeys?: Array<PublicKey>,
-): TransactionInstruction {
-  const keys =
+  signerPubkeys: Array<PublicKey>,
+): TransactionInstruction{
+    const keys =
     signerPubkeys == null
       ? []
       : signerPubkeys.map(function (key) {
@@ -40,4 +40,7 @@ export function createMemoInstruction(
     programId: MEMO_PROGRAM_ID,
     data: Buffer.from(memo, 'utf8'),
   });
+
+
+
 }

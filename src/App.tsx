@@ -3,11 +3,13 @@ import {
   PublicKey,
   Transaction,
   sendAndConfirmTransaction,
-  TransactionInstruction
+  TransactionInstruction,
+  Connection
 } from "@solana/web3.js";
 import './App.css';
 
 import {createMemoInstruction, MEMO_PROGRAM_ID} from './memo'
+import bs58 from "bs58";
 
 type DisplayEncoding = "utf8" | "hex";
 type PhantomEvent = "disconnect" | "connect" | "accountChanged";
@@ -16,7 +18,8 @@ type PhantomRequestMethod =
   | "disconnect"
   | "signTransaction"
   | "signAllTransactions"
-  | "signMessage";
+  | "signMessage"
+  | "signAndSendTransaction";
 
 interface ConnectOpts {
   onlyIfTrusted: boolean;
@@ -33,7 +36,7 @@ interface response {
 }
 
 interface prevResponse {
-  response: response,
+  response: response | string,
   message: string
 }
 
@@ -67,6 +70,7 @@ function App() {
   const [message, setMessage] = useState<string>("");
   const [prevResponse, setPrevResponse] = useState<prevResponse | undefined>(undefined);
 
+  const connection = new Connection("https://solana-api.projectserum.com")
   /**
    * @description gets Phantom provider, if it exists
    */
@@ -135,9 +139,14 @@ function App() {
       }
     };
 
-    const signAndSendTransaction = async (provider: PhantomProvider, transaction: TransactionInstruction): Promise<string | undefined> => {
+    const signAndSendTransactionFunc = async (provider: PhantomProvider, transaction: Transaction): Promise<string | undefined> => {
       try {
-        const { signature } = await provider.signAndSendTransaction(transaction);
+        const { signature } = await provider.request({
+          method: "signAndSendTransaction",
+          params: {
+               message: bs58.encode(transaction.serializeMessage()),
+          },
+        });
         return signature;
       } catch (error) {
         console.warn(error);
@@ -148,14 +157,24 @@ function App() {
     const memoTxn = async(e:any) => {
       e.preventDefault();
       if(pubKey && provider){
-        const transaction = createMemoInstruction(message, [pubKey])
-        console.log(transaction)
-        
-        const signature = signAndSendTransaction(provider, transaction);
-        console.log(signature)
-      }
+        const instructions = createMemoInstruction(message, [pubKey])
 
-      console.log('no pub ')
+        const transaction = new Transaction()
+        transaction.add(instructions)
+        let blockhash = (await connection.getLatestBlockhash('finalized')).blockhash;
+        transaction.recentBlockhash = blockhash;
+        transaction.feePayer = pubKey;
+        const signature = await signAndSendTransactionFunc(provider, transaction);
+        if(signature){
+          setPrevResponse({
+            response: signature,
+            message: message
+          })
+        }
+        console.log(signature)
+      } else{
+        console.log('no pub ')
+      }
       setMessage('');
     }
 
@@ -221,7 +240,7 @@ function App() {
           {prevResponse !== undefined ? 
           <div>
             <p><b>Message:</b> {prevResponse.message}</p>
-            <p><b>Signature / Tx Hash:</b> {prevResponse.response.signature}</p> 
+            <p><b>Signature / Tx Hash:</b> {typeof prevResponse.response === 'string' ? prevResponse.response : prevResponse.response.signature}</p> 
           </div>
           : null}
         </div>
