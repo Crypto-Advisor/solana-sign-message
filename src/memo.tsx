@@ -1,5 +1,5 @@
 import {Buffer} from 'buffer';
-import {PublicKey, TransactionInstruction, Transaction} from '@solana/web3.js';
+import {PublicKey, TransactionInstruction} from '@solana/web3.js';
 
 export const MEMO_PROGRAM_ID: PublicKey = new PublicKey(
   'MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr',

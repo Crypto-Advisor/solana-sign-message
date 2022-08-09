@@ -2,13 +2,12 @@ import { useEffect, useState } from "react";
 import {
   PublicKey,
   Transaction,
-  sendAndConfirmTransaction,
   TransactionInstruction,
   Connection
 } from "@solana/web3.js";
 import './App.css';
 
-import {createMemoInstruction, MEMO_PROGRAM_ID} from './memo'
+import {createMemoInstruction} from './memo'
 import bs58 from "bs58";
 
 type DisplayEncoding = "utf8" | "hex";
